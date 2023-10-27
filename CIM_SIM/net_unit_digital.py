@@ -20,18 +20,18 @@ def layer_Norm(input,hidden_dim,dtype_bytes, prompt_len,dmac_area):
 
 def QKV(input,hidden_dim,dtype_bytes, prompt_len,rram_area):
     # 计算多头自注意力的计算量
-    rram = RRAM(area=rram_area)
+    dmac = DMAC()
     sram = SRAM()
     dram = DRAM()
     input_size  = input
     output_size = hidden_dim * prompt_len * 3          #输出QKV三个矩阵
     weights     = hidden_dim * hidden_dim * 3                     #QKV三个矩阵所以乘以3
     operation   = (hidden_dim * hidden_dim * 2-hidden_dim) * prompt_len * 3     #操作数共计三个矩阵的
-    comput_delay= operation / (rram.get_computational_power()*1000000000000)/rram.get_utilization(weights)*1000
+    comput_delay= operation / (dmac.get_computational_power()*1000000000000)/dmac.get_utilization()*1000
     read_sram_delay = input_size * dtype_bytes / sram.get_read_write_bandwidth() / sram.get_utilization() / 1000000000 * 1000
     write_sram_delay = output_size * dtype_bytes / sram.get_read_write_bandwidth() / sram.get_utilization() / 1000000000 * 1000
     write_dram_delay = hidden_dim * prompt_len * dtype_bytes * 2/dram.get_read_write_bandwidth()/1000000000/dram.get_utilization() * 1000
-    read_dram_delay  = 0
+    read_dram_delay  = weights * dtype_bytes * 2/dram.get_read_write_bandwidth()/1000000000/dram.get_utilization() * 1000
     area = sram.get_area()
     return input_size,output_size,weights,operation,comput_delay,read_sram_delay,write_sram_delay,read_dram_delay,write_dram_delay,area
 
@@ -108,17 +108,19 @@ def Mul(input,hidden_dim,dtype_bytes, prompt_len,dmac_area,mode):
 
 def Linear(input,Linear_in_dim,Linear_out_dim,hidden_dim,dtype_bytes, prompt_len,rram_area):
     # 计算全连接层
-    rram = RRAM(area=rram_area)
+    dmac = DMAC()
     sram = SRAM()
+    dram = DRAM()
     input_size  = input
     output_size = Linear_out_dim * prompt_len
     weights     = Linear_in_dim * Linear_out_dim
     operation   = Linear_in_dim * Linear_out_dim * 2 * prompt_len
-    comput_delay = operation / (rram.get_computational_power() * 1000000000000) / rram.get_utilization(weights) * 1000
+    comput_delay = operation / (dmac.get_computational_power() * 1000000000000) / dmac.get_utilization() * 1000
     read_sram_delay = input_size * dtype_bytes / sram.get_read_write_bandwidth() / sram.get_utilization() / 1000000000 * 1000
     write_sram_delay = output_size * dtype_bytes / sram.get_read_write_bandwidth() / sram.get_utilization() / 1000000000 * 1000
 
-    read_dram_delay = write_dram_delay = 0
+    read_dram_delay = weights * dtype_bytes * 2/dram.get_read_write_bandwidth()/1000000000/dram.get_utilization() * 1000
+    write_dram_delay = 0
     area = sram.get_area()
     return input_size,output_size,weights,operation,comput_delay,read_sram_delay,write_sram_delay,read_dram_delay,write_dram_delay,area
 

@@ -1,6 +1,8 @@
 from hardware_unit import *
-
+from hardware_unit import DMAC
 from sim import LayerAnalyzer
+import matplotlib.pyplot as plt
+
 if __name__ == "__main__":
     # rram_cell = RRAM(30,  0.8)
     # print("RRAM_Computational Power:", rram_cell.get_computational_power())
@@ -18,17 +20,45 @@ if __name__ == "__main__":
     # print("DRAM_/Write Bandwidth:", dram_cell.get_read_write_bandwidth())
     # print("DRAM_Utilization:", dram_cell.get_utilization())
     # print("DRAM_Capacity:", dram_cell.get_capacity())
-    input=2048*1024
+    input = 2048 * 1024
     hidden_dim = 2048
     prompt_len = 1024
     dtype_bytes = 1
-    dmac_computational_power=16
-    dmac_utilization=0.65
-    rram_computational_power=30
-    sram_capacity=32
-    sram_read_write_bandwidth= 16
-    sram_utilization=0.8
-    dram_read_write_bandwidth=32
-    n=LayerAnalyzer()
-    n.prefill(input,hidden_dim,dtype_bytes,prompt_len,dmac_computational_power,dmac_utilization,rram_computational_power,
-              sram_capacity,sram_read_write_bandwidth,sram_utilization,dram_read_write_bandwidth)
+    block_number = 1
+    FFN_hidden_dim = 8192
+    rram_area = 480
+    dmac_area =619
+
+
+
+    dmac_computational_power = 16
+    rram_computational_power = 30
+    sram_capacity = 32
+    sram_read_write_bandwidth = 24
+    sram_utilization = 0.8
+    dram_read_write_bandwidth = 32
+    n = LayerAnalyzer()
+    delay_total=n.prefill(input=input, hidden_dim=hidden_dim, FFN_hidden_dim=FFN_hidden_dim, dtype_bytes=dtype_bytes,
+              prompt_len=prompt_len, block_number=block_number,
+              sram_capacity=sram_capacity, sram_read_write_bandwidth=sram_read_write_bandwidth,
+              sram_utilization=sram_utilization, dram_read_write_bandwidth=dram_read_write_bandwidth
+              , dmac_area=dmac_area,rram_area=rram_area)
+    print(delay_total)
+    # area_totals = []
+    # prefill_outputs = []
+    # compute_delay_val=100000
+    # for i in range(1, 619):
+    #     b=619-i
+    #     compute_delay = n.prefill(input=input, hidden_dim=hidden_dim, FFN_hidden_dim=FFN_hidden_dim,
+    #                               dtype_bytes=dtype_bytes,
+    #                               prompt_len=prompt_len, block_number=block_number,
+    #                               rram_area=i,dmac_area=b,
+    #
+    #                               sram_capacity=sram_capacity, sram_read_write_bandwidth=sram_read_write_bandwidth,
+    #                               sram_utilization=sram_utilization,
+    #                               dram_read_write_bandwidth=dram_read_write_bandwidth)
+    #     if compute_delay_val>compute_delay:
+    #         print('compute_delay:',compute_delay,'rram_area:',i,'dmac_area:',b)
+    #         compute_delay_val=compute_delay
+
+
